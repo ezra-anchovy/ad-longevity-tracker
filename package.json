@@ -1,0 +1,26 @@
+{
+  "name": "ad-longevity-tracker",
+  "version": "1.0.0",
+  "description": "Track competitor ads on Facebook Ad Library and identify long-running winners",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "scrape": "node src/scraper.js",
+    "analyze": "node src/analyzer.js",
+    "report": "node src/report-generator.js",
+    "dev": "node src/server.js",
+    "build": "node src/build-static.js"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0",
+    "express": "^4.18.2",
+    "openai": "^4.20.0",
+    "chart.js": "^4.4.0",
+    "pdfkit": "^0.13.0",
+    "node-cron": "^3.0.3",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0"
+  }
+}

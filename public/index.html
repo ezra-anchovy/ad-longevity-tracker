@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ad Longevity Tracker - Winners Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .tagline {
+      color: #666;
+      font-size: 1.2em;
+      margin-bottom: 30px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 25px;
+      border-radius: 15px;
+      text-align: center;
+    }
+    .stat-card h3 {
+      font-size: 2.5em;
+      margin-bottom: 5px;
+    }
+    .stat-card p {
+      opacity: 0.9;
+      font-size: 0.9em;
+    }
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+    .chart-container {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 15px;
+      height: 350px;
+    }
+    .ads-section {
+      margin-top: 40px;
+    }
+    .ads-section h2 {
+      font-size: 1.8em;
+      margin-bottom: 20px;
+      color: #667eea;
+    }
+    .ad-card {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      border-left: 4px solid #667eea;
+    }
+    .ad-card h3 {
+      font-size: 1.2em;
+      margin-bottom: 8px;
+      color: #333;
+    }
+    .ad-card .meta {
+      display: flex;
+      gap: 15px;
+      margin-top: 10px;
+      font-size: 0.9em;
+      color: #666;
+    }
+    .badge {
+      background: #667eea;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.85em;
+    }
+    .badge.veteran {
+      background: #28a745;
+    }
+    .badge.new {
+      background: #ffc107;
+    }
+    .btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 10px;
+      font-size: 1em;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: transform 0.2s;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #667eea;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🏆 Ad Longevity Tracker</h1>
+    <p class="tagline">Discover which competitor ads are winning by tracking longevity</p>
+    
+    <div id="loading" class="loading">
+      <h2>Loading dashboard...</h2>
+    </div>
+    
+    <div id="dashboard" style="display: none;">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3 id="totalAds">0</h3>
+          <p>Total Active Ads</p>
+        </div>
+        <div class="stat-card">
+          <h3 id="veteranAds">0</h3>
+          <p>Veteran Ads (30+ days)</p>
+        </div>
+        <div class="stat-card">
+          <h3 id="newAds">0</h3>
+          <p>New Launches (7 days)</p>
+        </div>
+        <div class="stat-card">
+          <h3 id="avgDays">0</h3>
+          <p>Avg Days Running</p>
+        </div>
+      </div>
+      
+      <div class="charts-grid">
+        <div class="chart-container">
+          <canvas id="categoryChart"></canvas>
+        </div>
+        <div class="chart-container">
+          <canvas id="hookChart"></canvas>
+        </div>
+      </div>
+      
+      <div class="ads-section">
+        <h2>🏆 Top 10 Longest-Running Ads (Winners)</h2>
+        <div id="veteranAdsList"></div>
+      </div>
+      
+      <div class="ads-section">
+        <h2>🚀 New Launches (Last 7 Days)</h2>
+        <div id="newAdsList"></div>
+      </div>
+      
+      <button class="btn" onclick="downloadReport()">📄 Download Winners Report (PDF)</button>
+    </div>
+  </div>
+  
+  <script>
+    async function loadDashboard() {
+      try {
+        // Load stats
+        const statsRes = await fetch('/api/stats');
+        const stats = await statsRes.json();
+        
+        document.getElementById('totalAds').textContent = stats.totalAds;
+        document.getElementById('veteranAds').textContent = stats.veteranAds;
+        document.getElementById('newAds').textContent = stats.newAds;
+        document.getElementById('avgDays').textContent = stats.avgDaysRunning.toFixed(1);
+        
+        // Create category chart
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(categoryCtx, {
+          type: 'doughnut',
+          data: {
+            labels: Object.keys(stats.categoryBreakdown),
+            datasets: [{
+              data: Object.values(stats.categoryBreakdown),
+              backgroundColor: ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b', '#fa709a']
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              title: { display: true, text: 'Ad Types Breakdown' }
+            }
+          }
+        });
+        
+        // Create hook chart
+        const hookCtx = document.getElementById('hookChart').getContext('2d');
+        new Chart(hookCtx, {
+          type: 'bar',
+          data: {
+            labels: Object.keys(stats.hookBreakdown),
+            datasets: [{
+              label: 'Ads by Hook',
+              data: Object.values(stats.hookBreakdown),
+              backgroundColor: 'rgba(102, 126, 234, 0.8)'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              title: { display: true, text: 'Hook/Angle Distribution' }
+            }
+          }
+        });
+        
+        // Load veteran ads
+        const veteranRes = await fetch('/api/ads/veterans?limit=10');
+        const veterans = await veteranRes.json();
+        
+        const veteranList = document.getElementById('veteranAdsList');
+        veteranList.innerHTML = veterans.map(ad => `
+          <div class="ad-card">
+            <h3>${ad.headline || 'No headline'}</h3>
+            <p>${(ad.body_text || '').substring(0, 200)}${ad.body_text?.length > 200 ? '...' : ''}</p>
+            <div class="meta">
+              <span class="badge veteran">${ad.days_running} days</span>
+              <span class="badge">${ad.page_name}</span>
+              <span class="badge">${ad.ai_category || ad.ad_type}</span>
+              <span class="badge">${ad.ai_hook || 'N/A'}</span>
+            </div>
+          </div>
+        `).join('');
+        
+        // Load new ads
+        const newRes = await fetch('/api/ads/new?days=7');
+        const newAds = await newRes.json();
+        
+        const newList = document.getElementById('newAdsList');
+        if (newAds.length === 0) {
+          newList.innerHTML = '<p style="color: #666;">No new ads launched in the past 7 days.</p>';
+        } else {
+          newList.innerHTML = newAds.slice(0, 10).map(ad => `
+            <div class="ad-card">
+              <h3>${ad.headline || 'No headline'}</h3>
+              <p>${(ad.body_text || '').substring(0, 200)}${ad.body_text?.length > 200 ? '...' : ''}</p>
+              <div class="meta">
+                <span class="badge new">${ad.days_running} days old</span>
+                <span class="badge">${ad.page_name}</span>
+                <span class="badge">${ad.ai_category || ad.ad_type}</span>
+                <span class="badge">${ad.ai_hook || 'N/A'}</span>
+              </div>
+            </div>
+          `).join('');
+        }
+        
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+      } catch (error) {
+        document.getElementById('loading').innerHTML = `
+          <h2 style="color: #dc3545;">Error loading dashboard</h2>
+          <p>${error.message}</p>
+          <p>Make sure to run the scraper first: <code>npm run scrape</code></p>
+        `;
+      }
+    }
+    
+    async function downloadReport() {
+      try {
+        // Generate report first
+        await fetch('/api/generate-report', { method: 'POST' });
+        // Download it
+        window.location.href = '/api/download-report';
+      } catch (error) {
+        alert('Error generating report: ' + error.message);
+      }
+    }
+    
+    loadDashboard();
+  </script>
+</body>
+</html>
