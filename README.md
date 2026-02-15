@@ -2,6 +2,9 @@
 
 **Stop guessing which ads work. Track competitor ads and discover which ones are ACTUALLY profitable by measuring longevity.**
 
+![Landing Page](screenshots/landing-page.jpg)
+![Dashboard](screenshots/dashboard.jpg)
+
 ## The Problem
 
 Small business owners and e-commerce sellers waste hours manually scrolling through Facebook Ad Library to spy on competitors. The real insight isn't just *what* ads they're running — it's **which ads have been running the longest** (30, 60, 90+ days). Long-running ads = profitable ads.
